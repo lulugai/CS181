@@ -21,11 +21,12 @@ def basis1(x):
 
 # TODO: Implement this
 def basis2(x):
-    return None
+    return np.stack([np.ones(len(x)), x, np.power(x, 2), np.power(x, 3)], axis=1) #[N,D+1+D]
 
 # TODO: Implement this
 def basis3(x):
-    return None
+    return np.stack([np.ones(len(x)), x, np.power(x, 2),
+         np.power(x, 3), np.power(x, 4), np.power(x, 5)], axis=1)
 
 class LogisticRegressor:
     def __init__(self, eta, runs):
@@ -44,10 +45,14 @@ class LogisticRegressor:
             self.W = w_init
         else:
             self.W = np.random.rand(x.shape[1], 1)
+        for _ in range(self.runs):
+            y_hat = sigmoid(np.dot(x, self.W))
+            grad_w = x.T @ (y_hat - y) / x.shape[0]
+            self.W = self.W - self.eta*grad_w
 
     # TODO: Fix this method!
     def predict(self, x):
-        return np.dot(x, self.W)
+        return sigmoid(np.dot(x, self.W))
 
 # Function to visualize prediction lines
 # Takes as input last_x, last_y, [list of models], basis function, title
@@ -111,12 +116,15 @@ if __name__ == "__main__":
     # TODO: Make plot for each basis with all 10 models on each plot
 
     # For example:
-    all_models = []
-    for _ in range(10):
-        x, y = generate_data(N)
-        x_transformed = basis1(x)
-        model = LogisticRegressor(eta=eta, runs=runs)
-        model.fit(x_transformed, y)
-        all_models.append(model)
-    # Here x and y contain last dataset:
-    visualize_prediction_lines(x, y, all_models, basis1, "exampleplot")
+    i = 1
+    for basis in [basis1, basis2, basis3]:
+        all_models = []
+        for _ in range(10):
+            x, y = generate_data(N)
+            x_transformed = basis(x)
+            model = LogisticRegressor(eta=eta, runs=runs)
+            model.fit(x_transformed, y)
+            all_models.append(model)
+        # Here x and y contain last dataset:
+        visualize_prediction_lines(x, y, all_models, basis, "basis" + str(i) + "plot")
+        i += 1
