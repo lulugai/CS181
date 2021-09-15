@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 
 # Please implement the predict() method of this class
@@ -22,11 +23,26 @@ class KNNModel:
         # just so that the distribution code is runnable and produces a
         # (currently meaningless) visualization.
         preds = []
-        for x in X_pred:
-            z = np.cos(x ** 2).sum()
-            preds.append(1 + np.sign(z) * (np.abs(z) > 0.3))
+        for x_pre in X_pred:
+            dists = []
+            for xi, yi in zip(self.X, self.y):
+                tmp = self.dist(xi, x_pre)
+                dists.append((yi, tmp))
+            dists = sorted(dists, key= lambda tuple: tuple[1])
+            y_pre = self.choose_y(dists)
+            preds.append(y_pre)
+
         return np.array(preds)
 
+    def choose_y(self, dists):
+        y_list = []
+        for i in range(self.K):
+            y_list.append(dists[i][0])
+        y = max(set(y_list), key=y_list.count)
+        return y
+
+    def dist(self, x1, x2):
+        return np.sqrt(((x1[0] - x2[0]) / 3)**2 + (x1[1] - x2[1])**2)
     # In KNN, "fitting" can be as simple as storing the data, so this has been written for you
     # If you'd like to add some preprocessing here without changing the inputs, feel free,
     # but it is completely optional.
