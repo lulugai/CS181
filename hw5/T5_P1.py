@@ -84,21 +84,48 @@ class EM_Geometric(object):
             The log-likelihood of current set of labels (according to a geometric distribution)
         '''
         # TODO: Implement the log-likelihood function
-        pass
+        N = len(self.data)
+        K = self.num_clusters
+        res = 0
+        for n in range(N):
+            for k in range(K):
+                res += self.q[n, k] * ((self.data[n]-1) * 
+                                       np.log(1-self.probs[k]) + 
+                                       np.log(self.probs[k]) +
+                                       np.log(self.pis[k]))
+        return res
 
     def e_step(self):
         '''
         Run the expectation step, calculating the soft assignments based on current parameter estimates
         '''
         # TODO: Implement the expectation step
-        pass
+        for n in range(len(self.data)):
+            tmp = np.array([self.probs[k] * (1 - self.probs[k]) ** (self.data[n] - 1) * self.pis[k] for k in range(self.num_clusters)])
+            tmp = tmp / np.sum(tmp)
+            self.q[n] = tmp
 
     def m_step(self):
         '''
         Run the maximization step, calculating parameter estimates based on current soft assignments
         '''
         # TODO: Implement the maximization step
-        pass
+        N = len(self.data)
+        K = self.num_clusters
+        for k in range(K):
+            total = 0
+            for n in range(N):
+                total += self.q[n,k]
+            self.pis[k] = total/N
+        
+        for k in range(K):
+            nume = 0
+            deno = 0
+            for n in range(N):
+                nume += self.q[n, k]
+                deno += self.q[n, k] * self.data[n]
+            
+            self.probs[k] = nume/deno
 
     def get_labels(self):
         '''
@@ -119,7 +146,7 @@ def generate_geom_data(num_data, cluster_probs):
 
 def main():
     # TODO: Toggle these between 10 / 1000 and [0.1, 0.5, 0.9] / [0.1, 0.2, 0.9]
-    num_data = 10
+    num_data = 1000
     cluster_probs = [0.1, 0.5, 0.9]
 
     # Do not edit the below code, it is to help you run the algorithm
