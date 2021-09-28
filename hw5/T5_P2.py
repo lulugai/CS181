@@ -28,10 +28,23 @@ def get_cumul_var(mnist_pics,
     """
 
     # TODO: compute PCA on input mnist_pics
+    #center
+    mnist_pics = mnist_pics - np.mean(mnist_pics, axis=0)
+
+    N, D = mnist_pics.shape
+    S = np.dot(mnist_pics.T, mnist_pics)/N
+    u, s, vh = np.linalg.svd(S)
+    # cols of u are eigenvectors then
+    # since u orthogonal, w[i] = u.T[i]
 
     # TODO: return a (num_leading_components, ) numpy array with the cumulative
     # fraction of variance for the leading k components
     ret = np.zeros(num_leading_components)
+    temp = np.sum(s)
+    temp_sum = 0
+    for i in range(num_leading_components):
+        temp_sum += s[i]
+        ret[i] = temp_sum / temp
 
     return ret
 
@@ -53,4 +66,46 @@ plt.figure()
 plt.imshow(mnist_pics[0].reshape(28,28), cmap='Greys_r')
 plt.show()
 
+# p2.1
+plt.plot(range(500), cum_var)
+plt.title("cumulative variance explained over number of eigenvalues")
+plt.xlabel("k largest eigenvalues")
+plt.ylabel("cumulative variance explained")
+plt.show()
 
+#p2.2
+mean_img = np.mean(mnist_pics, axis=0)
+plt.imshow(mean_img.reshape(28, 28), cmap='Greys_r')
+plt.show()
+
+mnist_pics = mnist_pics - mean_img
+N, D = mnist_pics.shape
+S = np.dot(mnist_pics.T, mnist_pics)/N
+u, s, vh = np.linalg.svd(S)
+# cols of u are eigenvectors then
+# since u orthogonal, w[i] = u.T[i]
+ws = u.T[:10]
+coefs = np.dot(mnist_pics, ws.T)
+for i in range(len(ws)):
+    plt.imshow(ws[i].reshape(28, 28), cmap='Greys_r')
+    plt.savefig("pc" + str(i) + ".png")
+    # plt.show()
+
+# p2.3
+mean_all = np.mean(mnist_pics, axis = 0)
+mean_projections = np.array([np.dot(mean_all, ws[k])*ws[k] for k in range(len(ws))])
+mean_rl = 0
+for n in range(N):
+    # get dist of each from mean, apparently
+    mean_rl += np.linalg.norm(mean_all - mnist_pics[n])**2 #L2 **2
+
+# pca rl
+pca_rl = 0
+for n in range(N):
+    temp_project = np.array([np.dot(mnist_pics[n], ws[k])*ws[k] for k in range(len(ws))]) #[10,1]
+    subspace_project = np.sum(temp_project, axis = 0)
+    pca_rl += np.linalg.norm(mnist_pics[n] - subspace_project)**2                      
+
+# pca_rl = np.linalg.norm(mean_all - np.sum(mean_projections, axis = 0))**2
+print(pca_rl)
+print(mean_rl)
